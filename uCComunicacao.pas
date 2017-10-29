@@ -1,6 +1,5 @@
 unit uCComunicacao;
 
-
 interface
 
 uses
@@ -25,12 +24,13 @@ uses
   IdTCPClient,
   IdHTTP,
   System.Net.HttpClient;
-    {
-const
+
+{
+  const
   _API_USUARIO = '/logindelphi/.json';
   _API_OBJETOS = '/tdevrocks-80dcb/.json';
   _API_OS = '/beaconCelSOS/IMEI_CELULAR/.json';
-  }
+}
 type
   TComunicacao = class
   private
@@ -45,10 +45,11 @@ type
     FMemTable: TFDMemTable;
   public
     constructor Create(ABaseURL: string = '');
-    function ObtemDados(APIResource: string): Boolean;overload;
+    function ObtemDados(APIResource: string): Boolean; overload;
     function ObtemDados(AMemTable: TFDMemTable; APIResource: string): Boolean; overload;
     function ObtemDados(APIResource: string; Carregar: Boolean): String; overload;
     function GravaDados(APIResource: string; AJson: string): Boolean;
+    function CadastraUsuario(ApiKey: string; Autenticacao: string): Boolean;
 
     property BaseURL: string read FBaseURL write FBaseURL;
     property Response: TFDMemTable read FMemTable write FMemTable;
@@ -58,7 +59,6 @@ type
 implementation
 
 { TSincronismo }
-
 constructor TComunicacao.Create(ABaseURL: string);
 begin
   FRESTRequest := TRESTRequest.Create(nil);
@@ -85,42 +85,42 @@ begin
 end;
 
 function TComunicacao.GravaDados(APIResource, AJson: string): Boolean;
-{$Region}
-(*var
+{$REGION}
+(* var
   lJsonStream: TStringStream;
   lIdHTTP: TIdHTTP;
   lResponse: string;
   lUrl: string;
-begin
+  begin
   try
-    lJsonStream := TStringStream.Create(Utf8Encode(AJson));
+  lJsonStream := TStringStream.Create(Utf8Encode(AJson));
 
-    lIdHTTP := TIdHTTP.Create(nil);
-    lIdHTTP.Request.Method := 'PUT';
-    lIdHTTP.Request.ContentType := 'application/json';
-    lIdHTTP.Request.CharSet := 'utf-8';
+  lIdHTTP := TIdHTTP.Create(nil);
+  lIdHTTP.Request.Method := 'PUT';
+  lIdHTTP.Request.ContentType := 'application/json';
+  lIdHTTP.Request.CharSet := 'utf-8';
 
-    lUrl := FBaseURL + APIResource;
-    lResponse := lIdHTTP.Put(lUrl, lJsonStream);
-    result := true;
+  lUrl := FBaseURL + APIResource;
+  lResponse := lIdHTTP.Put(lUrl, lJsonStream);
+  result := true;
   except
-    result := false;
+  result := false;
   end;
 *)
-{$EndRegion}
+{$ENDREGION}
 var
   lJsonStream: TStringStream;
   lIdHTTP: THTTPClient;
   lResponse: string;
   lUrl: string;
-  AResponseContent : TStringStream;
+  AResponseContent: TStringStream;
 begin
   try
     lJsonStream := TStringStream.Create(Utf8Encode(AJson));
 
     lIdHTTP := THTTPClient.Create;
-    //lIdHTTP.CustomHeaders['auth'] := 'anonymous';
-    //lIdHTTP.CustomHeaders['uid'] := '769d853d-393d-4228-94ca-592f6a9c563a';
+    // lIdHTTP.CustomHeaders['auth'] := 'anonymous';
+    // lIdHTTP.CustomHeaders['uid'] := '769d853d-393d-4228-94ca-592f6a9c563a';
     lIdHTTP.ContentType := 'application/json';
 
     lUrl := FBaseURL + APIResource;
@@ -131,6 +131,34 @@ begin
     result := false;
   end;
 
+end;
+
+function TComunicacao.CadastraUsuario(ApiKey, Autenticacao: string): Boolean;
+var
+  lJsonStream: TStringStream;
+  lIdHTTP: THTTPClient;
+  lResponse: string;
+  lUrl: string;
+  AResponseContent: TStringStream;
+begin
+  try
+    lJsonStream := TStringStream.Create(Utf8Encode(Autenticacao));
+
+    lIdHTTP := THTTPClient.Create;
+    // lIdHTTP.CustomHeaders['auth'] := 'anonymous';
+    // lIdHTTP.CustomHeaders['uid'] := '769d853d-393d-4228-94ca-592f6a9c563a';
+    lIdHTTP.ContentType := 'application/json';
+
+    lUrl := 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key='
+      + ApiKey;
+    AResponseContent := TStringStream.Create();
+    lIdHTTP.Post(lUrl, lJsonStream, AResponseContent);
+    lResponse := AResponseContent.ReadString(1000);
+    FResponseJson :=  AResponseContent.DataString;
+    result := true;
+  except
+    result := false;
+  end;
 
 end;
 
@@ -145,7 +173,7 @@ begin
     FResponseJson := FRESTResponse.Content;
 
     FRESTResponseDataSetAdapter.Active := true;
-    FMemTable.Active := True;
+    FMemTable.Active := true;
 
     result := FRESTResponse.Content;
   except
@@ -153,8 +181,7 @@ begin
   end;
 end;
 
-function TComunicacao.ObtemDados(AMemTable: TFDMemTable;
-  APIResource: string): Boolean;
+function TComunicacao.ObtemDados(AMemTable: TFDMemTable; APIResource: string): Boolean;
 begin
   try
     FRESTClient.BaseURL := FBaseURL;
@@ -165,10 +192,10 @@ begin
     FResponseJson := FRESTResponse.Content;
 
     FRESTResponseDataSetAdapter.Active := true;
-    FMemTable.Active := True;
+    FMemTable.Active := true;
 
     AMemTable.Data := FMemTable.Data;
-    result := True;
+    result := true;
   except
     result := false;
   end;
@@ -185,7 +212,7 @@ begin
     FResponseJson := FRESTResponse.Content;
 
     FRESTResponseDataSetAdapter.Active := true;
-    FMemTable.Active := true;
+    // FMemTable.Active := true;
     result := true;
   except
     result := false;
