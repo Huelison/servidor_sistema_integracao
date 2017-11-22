@@ -15,7 +15,6 @@ uses
 type
   TfrmPrincipal = class(TForm)
     Memo1: TMemo;
-    Button1: TButton;
     Button2: TButton;
     imgLista: TImageList;
     Panel1: TPanel;
@@ -23,19 +22,25 @@ type
     btnGravarClientes: TBitBtn;
     btnGravarMotVeic: TBitBtn;
     BitBtn2: TBitBtn;
-    BitBtn1: TBitBtn;
     btnGravarRotas: TBitBtn;
+    btnCriarUsuario: TBitBtn;
+    BitBtn1: TBitBtn;
+    BitBtn3: TBitBtn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure gravarClientes();
     procedure gravarRotas();
     procedure importarColetas();
+    procedure gravarCaminhaoUsuario();
     procedure cadastrarUsuario(Email: String; Senha: String);
     procedure btnGravarClientesClick(Sender: TObject);
     procedure btnImportarColetasClick(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure btnGravarRotasClick(Sender: TObject);
+    procedure btnCriarUsuarioClick(Sender: TObject);
+    procedure btnGravarMotVeicClick(Sender: TObject);
+    // function InputCombo(const ACaption, APrompt: string; const AList: TStrings): string;
   private
     FComunicacao: TComunicacao;
     function getComunicacao: TComunicacao;
@@ -56,6 +61,89 @@ implementation
 
 uses uDMPrincipal;
 
+function InputCombo(const ACaption, APrompt: string; const AList: TStrings): string;
+
+  function GetCharSize(Canvas: TCanvas): TPoint;
+  var
+    i: integer;
+    Buffer: array [0 .. 51] of Char;
+  begin
+    for i := 0 to 25 do
+      Buffer[i] := Chr(i + Ord('A'));
+    for i := 0 to 25 do
+      Buffer[i + 26] := Chr(i + Ord('a'));
+    GetTextExtentPoint(Canvas.Handle, Buffer, 52, TSize(Result));
+    Result.X := Result.X div 52;
+  end;
+
+var
+  Form: TForm;
+  Prompt: TLabel;
+  Combo: TComboBox;
+  DialogUnits: TPoint;
+  ButtonTop, ButtonWidth, ButtonHeight: integer;
+begin
+  Result := '';
+  Form := TForm.Create(Application);
+  with Form do
+    try
+      Canvas.Font := Font;
+      DialogUnits := GetCharSize(Canvas);
+      BorderStyle := bsDialog;
+      Caption := ACaption;
+      ClientWidth := MulDiv(180, DialogUnits.X, 4);
+      Position := poScreenCenter;
+      Prompt := TLabel.Create(Form);
+      with Prompt do
+      begin
+        Parent := Form;
+        Caption := APrompt;
+        Left := MulDiv(8, DialogUnits.X, 4);
+        Top := MulDiv(8, DialogUnits.Y, 8);
+        Constraints.MaxWidth := MulDiv(164, DialogUnits.X, 4);
+        WordWrap := true;
+      end;
+      Combo := TComboBox.Create(Form);
+      with Combo do
+      begin
+        Parent := Form;
+        Style := csDropDownList; // Caso o item possa ser digitado, altere aqui para csDropDowns
+        Items.Assign(AList);
+        ItemIndex := 0;
+        Left := Prompt.Left;
+        Top := Prompt.Top + Prompt.Height + 5;
+        Width := MulDiv(164, DialogUnits.X, 4);
+      end;
+      ButtonTop := Combo.Top + Combo.Height + 15;
+      ButtonWidth := MulDiv(50, DialogUnits.X, 4);
+      ButtonHeight := MulDiv(14, DialogUnits.Y, 8);
+      with TButton.Create(Form) do
+      begin
+        Parent := Form;
+        Caption := 'OK';
+        ModalResult := mrOk;
+        default := true;
+        SetBounds(MulDiv(38, DialogUnits.X, 4), ButtonTop, ButtonWidth, ButtonHeight);
+      end;
+      with TButton.Create(Form) do
+      begin
+        Parent := Form;
+        Caption := 'Cancelar';
+        ModalResult := mrCancel;
+        Cancel := true;
+        SetBounds(MulDiv(92, DialogUnits.X, 4), Combo.Top + Combo.Height + 15, ButtonWidth,
+          ButtonHeight);
+        Form.ClientHeight := Top + Height + 13;
+      end;
+      if ShowModal = mrOk then
+      begin
+        Result := Combo.Text;
+      end;
+    finally
+      Form.Free;
+    end;
+end;
+
 procedure TfrmPrincipal.btnImportarColetasClick(Sender: TObject);
 begin
   importarColetas;
@@ -63,13 +151,32 @@ end;
 
 procedure TfrmPrincipal.BitBtn2Click(Sender: TObject);
 begin
-  cadastrarUsuario('huelisonkemerich201110@hotmail.com', '221123');
+  cadastrarUsuario('huelisonkemerich20  01110@hotmail.com', '221123');
   // FComunicacao.CadastraUsuario('AIzaSyA-XNBTD3Q3F4EFD9qFPMdfl1pYkeYZAss', );
+end;
+
+procedure TfrmPrincipal.btnCriarUsuarioClick(Sender: TObject);
+var
+  Email: String;
+  Senha: String;
+begin
+  if (InputQuery('Coleta Leite', 'Informe um email!', Email)) then
+  begin
+    if (InputQuery('Coleta Leite', 'Informe uma senha!', Senha)) then
+    begin
+      cadastrarUsuario(Email, Senha);
+    end;
+  end;
 end;
 
 procedure TfrmPrincipal.btnGravarClientesClick(Sender: TObject);
 begin
   gravarClientes;
+end;
+
+procedure TfrmPrincipal.btnGravarMotVeicClick(Sender: TObject);
+begin
+  gravarCaminhaoUsuario;
 end;
 
 procedure TfrmPrincipal.btnGravarRotasClick(Sender: TObject);
@@ -79,9 +186,11 @@ end;
 
 procedure TfrmPrincipal.FormCreate(Sender: TObject);
 begin
-  BaseURL := 'https://teste-92e08.firebaseio.com/'; // na criação do formulário, o objeto
-  if not Assigned(FComunicacao) then // TComunicação é criado e recebe por parâmetro
-    FComunicacao := TComunicacao.Create(BaseURL); // a url do projeto
+  // na criação do formulário, o objeto TComunicação
+  // é criado e recebe por parâmetro a url do projeto
+  BaseURL := 'https://teste-92e08.firebaseio.com/';
+  if not Assigned(FComunicacao) then
+    FComunicacao := TComunicacao.Create(BaseURL);
 end;
 
 procedure TfrmPrincipal.gravarClientes;
@@ -92,20 +201,21 @@ begin
   dmPrincipal.qClientes.Close; // a lista de clientes que será gravada
   dmPrincipal.qClientes.open; // no Firebase
   dmPrincipal.qClientes.first;
-
   while not(dmPrincipal.qClientes.Eof) do
   begin
-    // A variavél cliente_object irá armazenar os dados de cada cliente, ja no formato JSON
+    // A variável cliente_object irá armazenar os dados de cada cliente,
+    //ja no formato JSON
     cliente_object := TJSONObject.Create;
-    cliente_object.AddPair('nome', dmPrincipal.qClientesNOME.Value);
+    cliente_object.AddPair('nome', dmPrincipal.qClientesNOME.AsString);
     if not(dmPrincipal.qClientesFONE.IsNull) then
-      cliente_object.AddPair('fone', dmPrincipal.qClientesFONE.Value);
-    cliente_object.AddPair('endereco', dmPrincipal.qClientesENDERECO.Value);
+      cliente_object.AddPair('fone', dmPrincipal.qClientesFONE.AsString);
+    cliente_object.AddPair('endereco', dmPrincipal.qClientesENDERECO.AsString);
     cliente_object.AddPair('id', dmPrincipal.qClientesID.AsString);
 
     // Neste momento é criado um par de chave/valor em que a chave é composta por
     // -key + id do cliente
-    clientes.AddPair(TJSONPair.Create('-key' + dmPrincipal.qClientesID.AsString, cliente_object));
+    clientes.AddPair(TJSONPair.Create('-key' + dmPrincipal.qClientesID.AsString,
+                      cliente_object));
 
     dmPrincipal.qClientes.Next;
   end;
@@ -113,6 +223,58 @@ begin
   // Com o evento GravaDados é possível salvar a lista no Firebase
   if (FComunicacao.GravaDados('clientes.json', clientes.ToString)) then
     ShowMessage('Sincronização de clientes realizada com sucesso!');
+end;
+
+procedure TfrmPrincipal.gravarCaminhaoUsuario;
+var
+  usuarios, usuario_object, caminhoes, caminhoes_object: TJSONObject;
+begin
+  usuarios := TJSONObject.Create; // a váriavel clientes irá armazenar
+  dmPrincipal.qMotoristas.Close; // a lista de clientes que será gravada
+  dmPrincipal.qMotoristas.open; // no Firebase
+  dmPrincipal.qMotoristas.first;
+
+  while not(dmPrincipal.qMotoristas.Eof) do
+  begin
+    if not(dmPrincipal.qMotoristasUID.IsNull) then
+    begin
+      usuario_object := TJSONObject.Create;
+      usuario_object.AddPair('nome', dmPrincipal.qMotoristasNOME.AsString);
+      usuario_object.AddPair('email', dmPrincipal.qMotoristasEMAIL.AsString);
+      usuario_object.AddPair('uID', dmPrincipal.qMotoristasUID.AsString);
+      usuario_object.AddPair('caminhao', dmPrincipal.qMotoristasCAMINHAO.AsString);
+
+      usuarios.AddPair(TJSONPair.Create(dmPrincipal.qMotoristasUID.AsString, usuario_object));
+    end;
+    dmPrincipal.qMotoristas.Next;
+  end;
+
+  // Com o evento GravaDados é possível salvar a lista no Firebase
+  if (FComunicacao.GravaDados('usuarios.json', usuarios.ToString)) then
+  begin
+    caminhoes := TJSONObject.Create; // a váriavel clientes irá armazenar
+    dmPrincipal.qCaminhoes.Close; // a lista de clientes que será gravada
+    dmPrincipal.qCaminhoes.open; // no Firebase
+    dmPrincipal.qCaminhoes.first;
+
+    while not(dmPrincipal.qCaminhoes.Eof) do
+    begin
+      caminhoes_object := TJSONObject.Create;
+      caminhoes_object.AddPair('id', dmPrincipal.qCaminhoesID.AsString);
+      caminhoes_object.AddPair('placa', dmPrincipal.qCaminhoesPLACA.AsString);
+
+      caminhoes.AddPair(TJSONPair.Create('-key' + dmPrincipal.qCaminhoesID.AsString,
+        caminhoes_object));
+
+      dmPrincipal.qCaminhoes.Next;
+    end;
+
+    // Com o evento GravaDados é possível salvar a lista no Firebase
+    if (FComunicacao.GravaDados('caminhoes.json', caminhoes.ToString)) then
+    begin
+      ShowMessage('Sincronização de Motoristas e caminhões realizada com sucesso!');
+    end;
+  end;
 
 end;
 
@@ -240,14 +402,26 @@ begin
 end;
 
 procedure TfrmPrincipal.Button2Click(Sender: TObject);
+var
+  List: TStringList;
+  vResult: String;
+  indice: integer;
 begin
-  if FComunicacao.ObtemDados('/teste.json') then
-  begin
-    ShowMessage('sucesso');
-    Memo1.Lines.add(FComunicacao.ResponseJson);
-  end
-  else
-    ShowMessage('ferro!!!');
+
+  try
+    List := TStringList.Create;
+
+    vResult := InputCombo('Selecione o motorista', 'Nome:', List);
+
+    indice := List.IndexOf(vResult);
+
+    ShowMessage(List[indice]);
+  finally
+    List.Free;
+  end;
+
+  // Testando o retorno string
+
 end;
 
 procedure TfrmPrincipal.cadastrarUsuario(Email, Senha: String);

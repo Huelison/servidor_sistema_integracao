@@ -168,4 +168,65 @@ object dmPrincipal: TdmPrincipal
       Origin = 'ROTA'
     end
   end
+  object qMotoristas: TFDQuery
+    Connection = fdConexao
+    SQL.Strings = (
+      'select  * from motoristas'
+      'order by id')
+    Left = 132
+    Top = 184
+    object qMotoristasID: TIntegerField
+      FieldName = 'ID'
+      Origin = 'ID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+    end
+    object qMotoristasNOME: TStringField
+      FieldName = 'NOME'
+      Origin = 'NOME'
+      Required = True
+      Size = 40
+    end
+    object qMotoristasCAMINHAO: TStringField
+      FieldName = 'CAMINHAO'
+      Origin = 'CAMINHAO'
+      Size = 7
+    end
+    object qMotoristasEMAIL: TStringField
+      FieldName = 'EMAIL'
+      Origin = 'EMAIL'
+      Size = 250
+    end
+    object qMotoristasUID: TStringField
+      FieldName = 'UID'
+      Origin = 'UID'
+      Size = 250
+    end
+    object qMotoristasCPF: TStringField
+      FieldName = 'CPF'
+      Origin = 'CPF'
+      Required = True
+      Size = 18
+    end
+  end
+  object qCaminhoes: TFDQuery
+    Connection = fdConexao
+    SQL.Strings = (
+      ''
+      'select id, placa from transportadores')
+    Left = 124
+    Top = 240
+    object qCaminhoesID: TStringField
+      FieldName = 'ID'
+      Origin = 'ID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+      Required = True
+      Size = 7
+    end
+    object qCaminhoesPLACA: TStringField
+      FieldName = 'PLACA'
+      Origin = 'PLACA'
+      Size = 7
+    end
+  end
 end
