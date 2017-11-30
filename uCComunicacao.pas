@@ -1,5 +1,5 @@
 unit uCComunicacao;
-
+
 interface
 
 uses
@@ -48,7 +48,7 @@ type
     function ObtemDados(APIResource: string): Boolean; overload;
     function ObtemDados(AMemTable: TFDMemTable; APIResource: string): Boolean; overload;
     function ObtemDados(APIResource: string; Carregar: Boolean): String; overload;
-    function GravaDados(APIResource: string; AJson: string): Boolean;
+    function GravaDados(APIResource: string; AJson: string; tpRequisicao: string = 'Put'): Boolean;
     function CadastraUsuario(ApiKey: string; Autenticacao: string): Boolean;
 
     property BaseURL: string read FBaseURL write FBaseURL;
@@ -84,7 +84,8 @@ begin
   FBaseURL := ABaseURL;
 end;
 
-function TComunicacao.GravaDados(APIResource, AJson: string): Boolean;
+function TComunicacao.GravaDados(APIResource, AJson: string; tpRequisicao: string = 'Put')
+  : Boolean;
 {$REGION}
 (* var
   lJsonStream: TStringStream;
@@ -125,10 +126,24 @@ begin
 
     lUrl := FBaseURL + APIResource;
     AResponseContent := TStringStream.Create();
-    lIdHTTP.Patch(lUrl, lJsonStream, AResponseContent);
-    result := true;
+
+    if tpRequisicao = 'Put' then
+    begin
+      lIdHTTP.Put(lUrl, lJsonStream, AResponseContent);
+    end
+    else if tpRequisicao = 'Patch' then
+    begin
+      lIdHTTP.Patch(lUrl, lJsonStream, AResponseContent);
+    end
+    else
+    begin
+      Result := false;
+      Abort
+    end;
+
+    Result := true;
   except
-    result := false;
+    Result := false;
   end;
 
 end;
@@ -154,10 +169,10 @@ begin
     AResponseContent := TStringStream.Create();
     lIdHTTP.Post(lUrl, lJsonStream, AResponseContent);
     lResponse := AResponseContent.ReadString(1000);
-    FResponseJson :=  AResponseContent.DataString;
-    result := true;
+    FResponseJson := AResponseContent.DataString;
+    Result := true;
   except
-    result := false;
+    Result := false;
   end;
 
 end;
@@ -175,9 +190,9 @@ begin
     FRESTResponseDataSetAdapter.Active := true;
     FMemTable.Active := true;
 
-    result := FRESTResponse.Content;
+    Result := FRESTResponse.Content;
   except
-    result := 'erro';
+    Result := 'erro';
   end;
 end;
 
@@ -195,9 +210,9 @@ begin
     FMemTable.Active := true;
 
     AMemTable.Data := FMemTable.Data;
-    result := true;
+    Result := true;
   except
-    result := false;
+    Result := false;
   end;
 end;
 
@@ -213,11 +228,12 @@ begin
 
     FRESTResponseDataSetAdapter.Active := true;
     // FMemTable.Active := true;
-    result := true;
+    Result := true;
   except
-    result := false;
+    Result := false;
   end;
 
 end;
 
 end.
+

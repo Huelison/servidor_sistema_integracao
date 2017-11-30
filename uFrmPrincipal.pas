@@ -24,8 +24,8 @@ type
     BitBtn2: TBitBtn;
     btnGravarRotas: TBitBtn;
     btnCriarUsuario: TBitBtn;
-    BitBtn1: TBitBtn;
-    BitBtn3: TBitBtn;
+    btnConfiguracao: TBitBtn;
+    btnVinculaFunc: TBitBtn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Button2Click(Sender: TObject);
@@ -40,6 +40,8 @@ type
     procedure btnGravarRotasClick(Sender: TObject);
     procedure btnCriarUsuarioClick(Sender: TObject);
     procedure btnGravarMotVeicClick(Sender: TObject);
+    procedure btnVinculaFuncClick(Sender: TObject);
+    procedure btnConfiguracaoClick(Sender: TObject);
     // function InputCombo(const ACaption, APrompt: string; const AList: TStrings): string;
   private
     FComunicacao: TComunicacao;
@@ -59,7 +61,7 @@ implementation
 
 {$R *.dfm}
 
-uses uDMPrincipal;
+uses uDMPrincipal, uFrmVinculaFunc, uFrmConfiguracao;
 
 function InputCombo(const ACaption, APrompt: string; const AList: TStrings): string;
 
@@ -149,10 +151,55 @@ begin
   importarColetas;
 end;
 
+procedure TfrmPrincipal.btnVinculaFuncClick(Sender: TObject);
+var
+  users_object, t: TJSONObject;
+  users: TJSONValue;
+  i, j: integer;
+
+begin
+  Memo1.Lines.add('     .::Carregando usuarios::.     ');
+
+  if FComunicacao.ObtemDados('/users.json') then
+  begin
+    frmVinculaFunc := TfrmVinculaFunc.Create(Application);
+
+    frmVinculaFunc.cdsDataSet.EmptyDataSet;
+
+    users_object := TJSONObject.ParseJSONValue(FComunicacao.ResponseJson) as TJSONObject;
+    Memo1.Lines.add('    .::Conteudo da Resposta::.  ');
+    Memo1.Lines.add(users_object.ToString());
+    frmVinculaFunc.cdsDataSet.Insert;
+    frmVinculaFunc.cdsDataSetemail.Value := '';
+    // frmVinculaFunc.cdsDataSetuid.AsString := Null;
+
+    for i := 0 to users_object.Count - 1 do
+    begin
+      users := users_object.Pairs[i].JsonValue;
+      frmVinculaFunc.cdsDataSet.Insert;
+      frmVinculaFunc.cdsDataSetemail.Value := users.GetValue<string>('email');
+      frmVinculaFunc.cdsDataSetuid.Value := users.GetValue<string>('uid');
+
+      frmVinculaFunc.cdsDataSet.Post;
+    end;
+
+    frmVinculaFunc.ShowModal();
+    frmVinculaFunc.Free;
+  end;
+
+end;
+
 procedure TfrmPrincipal.BitBtn2Click(Sender: TObject);
 begin
   cadastrarUsuario('huelisonkemerich20  01110@hotmail.com', '221123');
   // FComunicacao.CadastraUsuario('AIzaSyA-XNBTD3Q3F4EFD9qFPMdfl1pYkeYZAss', );
+end;
+
+procedure TfrmPrincipal.btnConfiguracaoClick(Sender: TObject);
+begin
+  frmConfiguracao := TfrmConfiguracao.Create(Application);
+  frmConfiguracao.ShowModal;
+  frmConfiguracao.Free;
 end;
 
 procedure TfrmPrincipal.btnCriarUsuarioClick(Sender: TObject);
@@ -204,7 +251,7 @@ begin
   while not(dmPrincipal.qClientes.Eof) do
   begin
     // A variável cliente_object irá armazenar os dados de cada cliente,
-    //ja no formato JSON
+    // ja no formato JSON
     cliente_object := TJSONObject.Create;
     cliente_object.AddPair('nome', dmPrincipal.qClientesNOME.AsString);
     if not(dmPrincipal.qClientesFONE.IsNull) then
@@ -214,8 +261,7 @@ begin
 
     // Neste momento é criado um par de chave/valor em que a chave é composta por
     // -key + id do cliente
-    clientes.AddPair(TJSONPair.Create('-key' + dmPrincipal.qClientesID.AsString,
-                      cliente_object));
+    clientes.AddPair(TJSONPair.Create('-key' + dmPrincipal.qClientesID.AsString, cliente_object));
 
     dmPrincipal.qClientes.Next;
   end;
@@ -229,6 +275,7 @@ procedure TfrmPrincipal.gravarCaminhaoUsuario;
 var
   usuarios, usuario_object, caminhoes, caminhoes_object: TJSONObject;
 begin
+
   usuarios := TJSONObject.Create; // a váriavel clientes irá armazenar
   dmPrincipal.qMotoristas.Close; // a lista de clientes que será gravada
   dmPrincipal.qMotoristas.open; // no Firebase
@@ -252,6 +299,7 @@ begin
   // Com o evento GravaDados é possível salvar a lista no Firebase
   if (FComunicacao.GravaDados('usuarios.json', usuarios.ToString)) then
   begin
+
     caminhoes := TJSONObject.Create; // a váriavel clientes irá armazenar
     dmPrincipal.qCaminhoes.Close; // a lista de clientes que será gravada
     dmPrincipal.qCaminhoes.open; // no Firebase
@@ -328,9 +376,8 @@ var
 begin
   Memo1.Lines.add('     .::Importando Coletas::.     ');
 
-  if FComunicacao.ObtemDados('/Coletas.json?orderBy="sincronizado"&equalTo="N"') then
+  if FComunicacao.ObtemDados('/Coletas.json?orderBy="Sincronizado"&equalTo="N"') then
   begin
-    ShowMessage('sucesso');
     coletas_object := TJSONObject.ParseJSONValue(FComunicacao.ResponseJson) as TJSONObject;
     Memo1.Lines.add('    .::Conteudo da Resposta::.  ');
     Memo1.Lines.add(coletas_object.ToString());
@@ -341,6 +388,7 @@ begin
       Memo1.Lines.add(coleta.GetValue<string>('data'));
       Memo1.Lines.add(coleta.GetValue<string>('rota'));
       Memo1.Lines.add(coleta.GetValue<string>('caminhao'));
+//      Memo1.Lines.Add(coleta.GetValue<TJSONObject>('ColetaCliente').ToString);
       for j := 0 to coleta.GetValue<TJSONArray>('ColetaCliente').Count - 1 do
       begin
         dmPrincipal.fdTransacao.StartTransaction;
@@ -357,8 +405,8 @@ begin
             dmPrincipal.qColetasPRODUTO.AsInteger := 1;
             dmPrincipal.qColetasDATA.AsDateTime :=
               StrToDate(copy(coleta.GetValue<string>('data'), 0, 2) + '/' +
-              copy(coleta.GetValue<string>('data'), 4, 2) + '/20' +
-              copy(coleta.GetValue<string>('data'), 7, 2));
+              copy(coleta.GetValue<string>('data'), 4, 2) + '/' +
+              copy(coleta.GetValue<string>('data'), 7, 4));
             dmPrincipal.qColetasQUANTIDADE.AsFloat := coletaClientes.GetValue<Double>('quantidade');
             dmPrincipal.qColetasALIZAROL.AsString := coletaClientes.GetValue<String>('alizarol');
             dmPrincipal.qColetasHORA.AsDateTime :=
@@ -372,17 +420,19 @@ begin
           if dmPrincipal.fdTransacao.Active then
             dmPrincipal.fdTransacao.Commit;
         end;
-        Memo1.Lines.add(coletaClientes.GetValue<string>('quantidade'));
+        Memo1.Lines.add(coletaClientes.GetValue<string>('quantidade', ''));
       end;
       t := TJSONObject.Create;
-      t.AddPair('sincronizado', 'S');
+      t.AddPair('Sincronizado', 'S');
       FComunicacao.GravaDados('/Coletas/' + coletas_object.Pairs[i].JsonString.Value + '.json',
-        t.ToString);
+        t.ToString, 'Patch');
       Memo1.Lines.add(coleta.GetValue<TJSONArray>('ColetaCliente').Items[0].ToString);
     end;
+
+    ShowMessage('sucesso');
   end
   else
-    ShowMessage('ferro!!!');
+    ShowMessage('Ocorreu um erro!!!');
 end;
 
 function TfrmPrincipal.getComunicacao: TComunicacao;

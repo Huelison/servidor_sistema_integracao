@@ -1,6 +1,7 @@
 object frmPrincipal: TfrmPrincipal
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
   Caption = '.:: Coleta Leite ::.'
   ClientHeight = 479
   ClientWidth = 761
@@ -11,6 +12,7 @@ object frmPrincipal: TfrmPrincipal
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -22,11 +24,10 @@ object frmPrincipal: TfrmPrincipal
     Height = 416
     Align = alBottom
     TabOrder = 0
-    Visible = False
   end
   object Button2: TButton
-    Left = 536
-    Top = 120
+    Left = 648
+    Top = 128
     Width = 75
     Height = 25
     Caption = 'Button2'
@@ -613,7 +614,7 @@ object frmPrincipal: TfrmPrincipal
       TabOrder = 4
       OnClick = btnCriarUsuarioClick
     end
-    object BitBtn1: TBitBtn
+    object btnConfiguracao: TBitBtn
       Left = 625
       Top = 1
       Width = 104
@@ -715,9 +716,9 @@ object frmPrincipal: TfrmPrincipal
         FFFEFFFFFFFFFFFFF9F9F8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       Layout = blGlyphTop
       TabOrder = 5
-      OnClick = btnCriarUsuarioClick
+      OnClick = btnConfiguracaoClick
     end
-    object BitBtn3: TBitBtn
+    object btnVinculaFunc: TBitBtn
       Left = 521
       Top = 1
       Width = 104
@@ -842,7 +843,7 @@ object frmPrincipal: TfrmPrincipal
         FFFFFFFFFFFFFF000000}
       Layout = blGlyphTop
       TabOrder = 6
-      OnClick = btnCriarUsuarioClick
+      OnClick = btnVinculaFuncClick
     end
   end
   object BitBtn2: TBitBtn
