@@ -15,6 +15,7 @@ object frmPrincipal: TfrmPrincipal
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Memo1: TMemo
@@ -24,6 +25,7 @@ object frmPrincipal: TfrmPrincipal
     Height = 416
     Align = alBottom
     TabOrder = 0
+    Visible = False
   end
   object Button2: TButton
     Left = 648

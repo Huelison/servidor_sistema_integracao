@@ -10,8 +10,8 @@ object dmPrincipal: TdmPrincipal
       'User_Name=SYSDBA'
       'Password=masterkey'
       'DriverID=FB')
-    Connected = True
     LoginPrompt = False
+    Transaction = fdTransacao
     Left = 32
     Top = 8
   end
@@ -103,7 +103,6 @@ object dmPrincipal: TdmPrincipal
     end
   end
   object qColetas: TFDQuery
-    Active = True
     ObjectView = False
     Connection = fdConexao
     Transaction = fdTransacao
@@ -114,19 +113,16 @@ object dmPrincipal: TdmPrincipal
     object qColetasCLIFOR: TIntegerField
       FieldName = 'CLIFOR'
       Origin = 'CLIFOR'
-      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
       Required = True
     end
     object qColetasPRODUTO: TIntegerField
       FieldName = 'PRODUTO'
       Origin = 'PRODUTO'
-      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
       Required = True
     end
     object qColetasDATA: TDateField
       FieldName = 'DATA'
       Origin = '"DATA"'
-      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
       Required = True
     end
     object qColetasTIKET: TIntegerField
@@ -166,6 +162,11 @@ object dmPrincipal: TdmPrincipal
     object qColetasROTA: TIntegerField
       FieldName = 'ROTA'
       Origin = 'ROTA'
+    end
+    object qColetasID: TIntegerField
+      FieldName = 'ID'
+      Origin = 'ID'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
     end
   end
   object qMotoristas: TFDQuery

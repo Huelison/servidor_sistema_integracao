@@ -27,6 +27,16 @@ type
     qRotasClientes: TFDQuery;
     qRotasClientesID: TIntegerField;
     qColetas: TFDQuery;
+    qMotoristas: TFDQuery;
+    qMotoristasID: TIntegerField;
+    qMotoristasNOME: TStringField;
+    qMotoristasCAMINHAO: TStringField;
+    qMotoristasEMAIL: TStringField;
+    qMotoristasUID: TStringField;
+    qMotoristasCPF: TStringField;
+    qCaminhoes: TFDQuery;
+    qCaminhoesID: TStringField;
+    qCaminhoesPLACA: TStringField;
     qColetasCLIFOR: TIntegerField;
     qColetasPRODUTO: TIntegerField;
     qColetasDATA: TDateField;
@@ -38,16 +48,7 @@ type
     qColetasTEMPERATURA: TBCDField;
     qColetasCAMINHAO: TIntegerField;
     qColetasROTA: TIntegerField;
-    qMotoristas: TFDQuery;
-    qMotoristasID: TIntegerField;
-    qMotoristasNOME: TStringField;
-    qMotoristasCAMINHAO: TStringField;
-    qMotoristasEMAIL: TStringField;
-    qMotoristasUID: TStringField;
-    qMotoristasCPF: TStringField;
-    qCaminhoes: TFDQuery;
-    qCaminhoesID: TStringField;
-    qCaminhoesPLACA: TStringField;
+    qColetasID: TIntegerField;
   private
     { Private declarations }
   public

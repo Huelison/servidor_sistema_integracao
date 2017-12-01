@@ -10,7 +10,7 @@ uses
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
   FireDAC.Comp.Client, uCComunicacao, Vcl.ExtCtrls, System.ImageList,
-  Vcl.ImgList, rest.JSON, Vcl.Grids, Vcl.DBGrids;
+  Vcl.ImgList, rest.JSON, Vcl.Grids, Vcl.DBGrids, IniFiles;
 
 type
   TfrmPrincipal = class(TForm)
@@ -42,6 +42,7 @@ type
     procedure btnGravarMotVeicClick(Sender: TObject);
     procedure btnVinculaFuncClick(Sender: TObject);
     procedure btnConfiguracaoClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     // function InputCombo(const ACaption, APrompt: string; const AList: TStrings): string;
   private
     FComunicacao: TComunicacao;
@@ -50,6 +51,7 @@ type
     { Private declarations }
   public
     { Public declarations }
+    procedure getConfig();
     property Comunicacao: TComunicacao read getComunicacao write setComunicacao;
   end;
 
@@ -159,7 +161,7 @@ var
 
 begin
   Memo1.Lines.add('     .::Carregando usuarios::.     ');
-
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   if FComunicacao.ObtemDados('/users.json') then
   begin
     frmVinculaFunc := TfrmVinculaFunc.Create(Application);
@@ -186,7 +188,7 @@ begin
     frmVinculaFunc.ShowModal();
     frmVinculaFunc.Free;
   end;
-
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StopWait;
 end;
 
 procedure TfrmPrincipal.BitBtn2Click(Sender: TObject);
@@ -238,12 +240,14 @@ begin
   BaseURL := 'https://teste-92e08.firebaseio.com/';
   if not Assigned(FComunicacao) then
     FComunicacao := TComunicacao.Create(BaseURL);
+
 end;
 
 procedure TfrmPrincipal.gravarClientes;
 var
   clientes, cliente_object: TJSONObject;
 begin
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   clientes := TJSONObject.Create; // a váriavel clientes irá armazenar
   dmPrincipal.qClientes.Close; // a lista de clientes que será gravada
   dmPrincipal.qClientes.open; // no Firebase
@@ -269,13 +273,14 @@ begin
   // Com o evento GravaDados é possível salvar a lista no Firebase
   if (FComunicacao.GravaDados('clientes.json', clientes.ToString)) then
     ShowMessage('Sincronização de clientes realizada com sucesso!');
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.stopWait;
 end;
 
 procedure TfrmPrincipal.gravarCaminhaoUsuario;
 var
   usuarios, usuario_object, caminhoes, caminhoes_object: TJSONObject;
 begin
-
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   usuarios := TJSONObject.Create; // a váriavel clientes irá armazenar
   dmPrincipal.qMotoristas.Close; // a lista de clientes que será gravada
   dmPrincipal.qMotoristas.open; // no Firebase
@@ -322,6 +327,7 @@ begin
     begin
       ShowMessage('Sincronização de Motoristas e caminhões realizada com sucesso!');
     end;
+    dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StopWait;
   end;
 
 end;
@@ -331,6 +337,7 @@ var
   rota, rota_object, rota_cliente, rota_cliente_object: TJSONObject;
   contador: integer;
 begin
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   rota := TJSONObject.Create;
   dmPrincipal.qRotas.Close;
   dmPrincipal.qRotas.open();
@@ -365,6 +372,7 @@ begin
   if (FComunicacao.GravaDados('rotas.json', rota.ToString)) then
     ShowMessage('Sincronização de rotas realizada com sucesso!');
   Memo1.Text := rota.ToJSON;
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StopWait;
 end;
 
 procedure TfrmPrincipal.importarColetas;
@@ -375,7 +383,7 @@ var
 
 begin
   Memo1.Lines.add('     .::Importando Coletas::.     ');
-
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   if FComunicacao.ObtemDados('/Coletas.json?orderBy="Sincronizado"&equalTo="N"') then
   begin
     coletas_object := TJSONObject.ParseJSONValue(FComunicacao.ResponseJson) as TJSONObject;
@@ -388,7 +396,7 @@ begin
       Memo1.Lines.add(coleta.GetValue<string>('data'));
       Memo1.Lines.add(coleta.GetValue<string>('rota'));
       Memo1.Lines.add(coleta.GetValue<string>('caminhao'));
-//      Memo1.Lines.Add(coleta.GetValue<TJSONObject>('ColetaCliente').ToString);
+      // Memo1.Lines.Add(coleta.GetValue<TJSONObject>('ColetaCliente').ToString);
       for j := 0 to coleta.GetValue<TJSONArray>('ColetaCliente').Count - 1 do
       begin
         dmPrincipal.fdTransacao.StartTransaction;
@@ -417,8 +425,16 @@ begin
             dmPrincipal.qColetasROTA.AsInteger := coleta.GetValue<integer>('rota');
             dmPrincipal.qColetas.Post;
           end;
-          if dmPrincipal.fdTransacao.Active then
-            dmPrincipal.fdTransacao.Commit;
+
+          TRY
+            if dmPrincipal.fdConexao.Transaction.Active then
+            BEGIN
+              dmPrincipal.fdConexao.Transaction.Commit;
+              dmPrincipal.fdConexao.Commit;
+            END;
+          FINALLY
+
+          END;
         end;
         Memo1.Lines.add(coletaClientes.GetValue<string>('quantidade', ''));
       end;
@@ -433,11 +449,27 @@ begin
   end
   else
     ShowMessage('Ocorreu um erro!!!');
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StopWait;
 end;
 
 function TfrmPrincipal.getComunicacao: TComunicacao;
 begin
   Result := FComunicacao;
+end;
+
+procedure TfrmPrincipal.getConfig;
+var
+  Arq: TIniFile;
+begin
+  try
+    Arq := TIniFile.Create(ExtractFilePath(Application.ExeName) + '\config.ini');
+    dmPrincipal.fdConexao.Connected := false;
+    dmPrincipal.fdConexao.Params.Database := Arq.ReadString('Configuration', 'dbPath',
+      'C:\Users\Huelison\faculdade\TCC\projeto\dados\ADMINISTRADOR.FDB');
+    dmPrincipal.fdConexao.Connected := true;
+  finally
+    Arq.Free;
+  end;
 end;
 
 procedure TfrmPrincipal.setComunicacao(const Value: TComunicacao);
@@ -449,6 +481,11 @@ procedure TfrmPrincipal.FormDestroy(Sender: TObject);
 begin
   if Assigned(FComunicacao) then
     FComunicacao.DisposeOf;
+end;
+
+procedure TfrmPrincipal.FormShow(Sender: TObject);
+begin
+  getConfig();
 end;
 
 procedure TfrmPrincipal.Button2Click(Sender: TObject);
@@ -479,6 +516,7 @@ var
   usuario: TJSONObject;
   resposta: string;
 begin
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StartWait;
   usuario := TJSONObject.Create();
   usuario.AddPair('email', Email);
   usuario.AddPair('password', Senha);
@@ -502,7 +540,7 @@ begin
   begin
     ShowMessage('Usuário cadastrado com sucesso!');
   end;
-
+  dmPrincipal.FDGUIxWaitCursor1.WaitCursor.StopWait;
 end;
 
 end.

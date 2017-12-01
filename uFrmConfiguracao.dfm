@@ -13,6 +13,7 @@ object frmConfiguracao: TfrmConfiguracao
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -22,7 +23,7 @@ object frmConfiguracao: TfrmConfiguracao
     Height = 13
     Caption = 'Caminho da base de dados:'
   end
-  object Edit1: TEdit
+  object edtDbName: TEdit
     Left = 8
     Top = 41
     Width = 353
@@ -36,5 +37,6 @@ object frmConfiguracao: TfrmConfiguracao
     Height = 25
     Caption = 'Salvar'
     TabOrder = 1
+    OnClick = Button1Click
   end
 end
